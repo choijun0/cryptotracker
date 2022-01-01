@@ -5,14 +5,24 @@ import {Link} from "react-router-dom"
 
 const CoinImageURL = "https://cryptoicon-api.vercel.app/api/icon/"
 
-const CoinsDataURL = "https://api.upbit.com/v1/market/all";
+
+const CoinPafrikaData = "https://api.coinpaprika.com/v1/coins";
+
+const CoinsUpbitData = "https://api.upbit.com/v1/market/all";
 
 //fetch data
-interface coinsInfo {
+interface IupBitcoinsInfo {
   market: string; 
   korean_name: string;
   english_name: string;
   symbol: string;
+}
+
+interface IpafrikaInfo {
+  id: string;
+  name: string;
+  symbol: string;
+  rank: number;
 }
 
 //Coin Container
@@ -63,18 +73,28 @@ display: inline-block;
 `
 
 const CoinList = () => {
-  const [rederingCoinData, setRederingCoinData] = useState<coinsInfo[]>([]);
+  //const [rederingCoinData, setRederingCoinData] = useState<IupBitcoinsInfo[]>([]);
+  const [coins, setCoins] = useState<IpafrikaInfo[]>();
+
   const [isLoading, setIsLoading] = useState<Boolean>(true);
   useEffect(()=> {
     (async () => {
-      const response = await fetch(CoinsDataURL);
-      const dataList:coinsInfo[] = await response.json();
+      /*
+      const response = await fetch(CoinsUpbitData);
+      const dataList:IupBitcoinsInfo[] = await response.json();
       const krwMarketData = dataList.filter(data => {
         const tradeCurrencies = data.market.split("-");
         data.symbol = tradeCurrencies[1]; 
         return tradeCurrencies[0] === "KRW";
       })
+
       setRederingCoinData(krwMarketData);
+      setIsLoading(false);
+      */
+
+      const response = await fetch(CoinPafrikaData);
+      const json = await response.json();
+      setCoins(json.slice(0, 100));
       setIsLoading(false);
     })();
   },[])
@@ -83,20 +103,19 @@ const CoinList = () => {
     <>
       {isLoading ? "Loading Now.." : 
       <Container>
-        {rederingCoinData.map(coin => {
+        {coins?.map(coin => {
           const coinSymbol = coin.symbol.toLowerCase();
           const linkTo = {
-            pathname: `/${coinSymbol}`,
+            pathname: `/${coin.id}`,
           }
           const linkState = {
-            market: coin.market,
-            name: coin.english_name,
+            name: coin.name,
           }
           return (
-            <Element key={coin.english_name}>
+            <Element key={coin.id}>
               <CoinImage bgSrc={CoinImageURL + coinSymbol} />
               <CoinLink to={linkTo} state={linkState}>
-                <CoinName>{coin.korean_name}</CoinName>
+                <CoinName>{coin.name}</CoinName>
               </CoinLink>
             </Element>
             )

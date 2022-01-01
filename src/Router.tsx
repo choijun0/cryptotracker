@@ -1,6 +1,8 @@
 import {BrowserRouter, Routes, Route} from "react-router-dom"
 import CoinInfo from "./routes/CoinInfo"
 import CoinList from "./routes/CoinList"
+import Chart from "./routes/nestedRoutes/chart"
+import Price from "./routes/nestedRoutes/price"
 
 const Router = () => {
 
@@ -8,7 +10,10 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<CoinList />}></Route>
-        <Route path="/:coinId" element={<CoinInfo />}></Route>
+        <Route path=":coinId" element={<CoinInfo />}>
+          <Route path="chart" element={<Chart />}/>
+          <Route path="price" element={<Price />}/>
+        </Route>
       </Routes>
     </BrowserRouter>
   )
