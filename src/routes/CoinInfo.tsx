@@ -5,9 +5,14 @@ import axios from "axios"
 import { setInterval } from "timers/promises";
 import { setIntervalAsync } from "set-interval-async/dynamic";
 import styled from "styled-components"
+import { Helmet } from "react-helmet";
 
+
+import {coinInfo, coinTickers} from "../api";
 import Chart from "./nestedRoutes/chart" 
 import Price from "./nestedRoutes/price"
+import {useQuery} from "react-query";
+
 
 
 interface IRouterState {
@@ -17,13 +22,9 @@ interface IRouterState {
 }
 
 interface IRouterParams {
-  coinId: string;
+  coinId?: string;
 }
 
-interface IparentRoute {
-  state: IRouterState;
-  coinId: IRouterParams;
-}
 
 interface IPricePerMinute {
     market: string;
@@ -40,7 +41,7 @@ interface IPricePerMinute {
 }
 
 
-interface InfoData {
+interface IInfoData {
   id: string;
   name: string;
   symbol: string;
@@ -61,7 +62,7 @@ interface InfoData {
   last_data_at: string;
 }
 
-interface PriceData {
+interface IPriceData {
   id: string;
   name: string;
   symbol: string;
@@ -117,6 +118,9 @@ width: 100%;
 & div:nth-child(2){
   margin: 0 auto;
 }
+& div:nth-child(3){
+  margin-left: 0 auto;
+}
 `
 
 const Tab = styled.span<{ isActive: Boolean; }>`
@@ -133,56 +137,29 @@ const Tab = styled.span<{ isActive: Boolean; }>`
 
 const CoinInfo = () => {
   const {state} = useLocation() as IRouterState;
-  const {coinId} = useParams();
-  const [isLoading, setIsLoading] = useState<Boolean>(true);
-  //coinPafrik  a
-  const [info, setInfo] = useState<InfoData>() 
-  const [priceInfo, setPriceInfo] = useState<PriceData>();
-  //Upbit
-  const [upBit, setUpbit] = useState<IPricePerMinute>();
+  const {coinId} = useParams<{coinId?: string}>();
 
   //RouterMatch
-
   const isChart = useMatch("/:coinId/chart");
   const isPrice = useMatch("/:coinId/price");
 
-  useEffect(() => {
-    console.log("component mounted");
-    (async () => {
-      //CoinPafrika
-      const infoData = await (
-        await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-      ).json();
-      const priceData = await (
-        await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-      ).json();
-
-      setInfo(infoData);
-      setPriceInfo(priceData);
-
-      //Upbit
-      /*
-      const fetchedData: IPricePerMinute= await axios.get(pricePerMinute + updateInterval, {
-        params: {
-          market: state.market,
-          count: 1,
-        }
-      }).then(res => res.data[0])
-      setUpbit(fetchedData);
-      */
-
-
-      setIsLoading(false);
-    })()
-  }
-, [coinId]) //latest react hooks encourage to fulfill the [].
+  //Fetch
+  const {isLoading: infoLoading, data: infoData} = useQuery<IInfoData>([`coinInfo/${coinId}`, coinId], () => coinInfo(coinId));
+  const {isLoading: priceLoading, data: priceData} = useQuery<IPriceData>([`coinTickers/${coinId}`, coinId], () => coinTickers(coinId),{
+      refetchInterval: 3000,
+    });
+  const loading = infoLoading || priceLoading;
 
   return (
     <>
-      <MainContainer>
+      <Helmet>
+        <title>{`${coinId}`}</title>
+      </Helmet>
+      {loading ? "It's loading now...": <MainContainer>
         <Name>
-          <div>{info?.rank}</div>
-          <div>{state?.name ? state.name : isLoading ? "isLoading..." : info?.name}</div>
+          <div>{infoData?.rank}</div>
+          <div>{infoData?.name}</div>
+          <div>{`price:$${priceData?.quotes.USD.price.toFixed(4)}`}</div>
         </Name>
         <nav>
           <Tab isActive={isChart !== null}>
@@ -192,8 +169,11 @@ const CoinInfo = () => {
             <Link to="price">Price</Link>
           </Tab>
         </nav>
-        <Outlet />
-      </MainContainer>
+        <Routes>
+          <Route path="chart" element={<Chart coinId={coinId} />}/>
+          <Route path="price" element={<Price />}/>
+        </Routes>
+      </MainContainer>}
     </>
   )
 }

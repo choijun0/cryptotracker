@@ -1,6 +1,7 @@
 import Router from "./Router"
 import GlobalStyle from "./GlobalStyle"
 import styled from "styled-components"
+import { ReactQueryDevtools } from "react-query/devtools";
 
 
 const Box = styled.div`
@@ -16,6 +17,7 @@ const App = () => {
     <Box>
       <GlobalStyle />
       <Router />
+      <ReactQueryDevtools initialIsOpen={true}/>
     </Box>
   );
 }

@@ -1,6 +1,17 @@
 import React, { useEffect } from "react"
+import {coinOhlcv} from "../../api"
+import {useQuery} from "react-query";
 
-const Chart = () => {
+interface IChartProps {
+  coinId?: string;
+}
+
+const Chart = ({coinId}: IChartProps) => {
+  const {isLoading, data} = useQuery(`ohlcv/${coinId}`, () => coinOhlcv(coinId));
+
+  if(!isLoading){
+    console.log(data);
+  }
 
   return (
     <>

@@ -1,12 +1,10 @@
 import React, {useEffect, useState} from "react"
 import styled from "styled-components"
 import {Link} from "react-router-dom"
+import {useQuery} from "react-query"
+import {coinList} from "../api"
+import { Helmet } from "react-helmet";
 
-
-const CoinImageURL = "https://cryptoicon-api.vercel.app/api/icon/"
-
-
-const CoinPafrikaData = "https://api.coinpaprika.com/v1/coins";
 
 const CoinsUpbitData = "https://api.upbit.com/v1/market/all";
 
@@ -72,39 +70,19 @@ padding-bottom : 2px;
 display: inline-block;
 `
 
+const CoinImageURL = "https://cryptoicon-api.vercel.app/api/icon/"
+
 const CoinList = () => {
-  //const [rederingCoinData, setRederingCoinData] = useState<IupBitcoinsInfo[]>([]);
-  const [coins, setCoins] = useState<IpafrikaInfo[]>();
-
-  const [isLoading, setIsLoading] = useState<Boolean>(true);
-  useEffect(()=> {
-    (async () => {
-      /*
-      const response = await fetch(CoinsUpbitData);
-      const dataList:IupBitcoinsInfo[] = await response.json();
-      const krwMarketData = dataList.filter(data => {
-        const tradeCurrencies = data.market.split("-");
-        data.symbol = tradeCurrencies[1]; 
-        return tradeCurrencies[0] === "KRW";
-      })
-
-      setRederingCoinData(krwMarketData);
-      setIsLoading(false);
-      */
-
-      const response = await fetch(CoinPafrikaData);
-      const json = await response.json();
-      setCoins(json.slice(0, 100));
-      setIsLoading(false);
-    })();
-  },[])
+  const {isLoading, data} = useQuery<IpafrikaInfo[]>("coinList", coinList);
 
   return (
     <>
+      <Helmet>
+        <title>{`CoinList`}</title>
+      </Helmet>
       {isLoading ? "Loading Now.." : 
       <Container>
-        {coins?.map(coin => {
-          const coinSymbol = coin.symbol.toLowerCase();
+        {data?.slice(0, 100).map(coin => {
           const linkTo = {
             pathname: `/${coin.id}`,
           }
@@ -113,7 +91,7 @@ const CoinList = () => {
           }
           return (
             <Element key={coin.id}>
-              <CoinImage bgSrc={CoinImageURL + coinSymbol} />
+              <CoinImage bgSrc={CoinImageURL + coin.symbol.toLowerCase()} />
               <CoinLink to={linkTo} state={linkState}>
                 <CoinName>{coin.name}</CoinName>
               </CoinLink>
