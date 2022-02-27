@@ -13,6 +13,20 @@ export function coinTickers(coinId: string | undefined){
   return fetch(BaseUrl + `tickers/${coinId}`).then(response => response.json());
 }
 
+
+
+interface IOhlcvFetchData {
+  time_open: string;
+  time_close: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  market_cap: number;
+}
+
+
 export function coinOhlcv(coinId: string | undefined){
   //Module
   const querystringModule = require('querystring');
@@ -26,9 +40,8 @@ export function coinOhlcv(coinId: string | undefined){
     end: endDate,
   });
 
-  return fetch(BaseUrl + `coins/${coinId}/ohlcv/historical?${queryString}`).then(response => response.json())
+  return fetch(`${BaseUrl}coins/${coinId}/ohlcv/historical?${queryString}`).then(res => res.json()).then(res => res.map((data: IOhlcvFetchData) => [new Date(data.time_close).getTime(), [data.open, data.high, data.low, data.close]]));
 }
-
     /*
       const response = await fetch(CoinsUpbitData);
       const dataList:IupBitcoinsInfo[] = await response.json();

@@ -4,6 +4,8 @@ import {Link} from "react-router-dom"
 import {useQuery} from "react-query"
 import {coinList} from "../api"
 import { Helmet } from "react-helmet";
+import {useRecoilValue} from "recoil";
+import {isSearching} from "../Atom"
 
 
 const CoinsUpbitData = "https://api.upbit.com/v1/market/all";
@@ -34,7 +36,7 @@ flex-direction: column;
 `
 const Element = styled.div`
 margin-top : 2px;
-background-color: ${props => props.theme.defaultWhiteColor};
+background-color: ${props => props.theme.elementColor};
 display: flex;
 height : 25px;
 width: 100%;
@@ -74,7 +76,9 @@ const CoinImageURL = "https://cryptoicon-api.vercel.app/api/icon/"
 
 const CoinList = () => {
   const {isLoading, data} = useQuery<IpafrikaInfo[]>("coinList", coinList);
-
+  //coin query
+  const searchingData = useRecoilValue(isSearching); 
+  
   return (
     <>
       <Helmet>
@@ -83,6 +87,13 @@ const CoinList = () => {
       {isLoading ? "Loading Now.." : 
       <Container>
         {data?.slice(0, 100).map(coin => {
+          if(searchingData){
+            const length = searchingData.length;
+            const sliced_coinName = coin.name.slice(0, length);
+            if(searchingData.toLowerCase() !== sliced_coinName.toLowerCase()){
+              return;
+            }
+          }
           const linkTo = {
             pathname: `/${coin.id}`,
           }

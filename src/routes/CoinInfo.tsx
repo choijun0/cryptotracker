@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import {useLocation, useParams} from "react-router"
-import {Routes, Route, Outlet, Link, useMatch} from "react-router-dom"
+import {Routes, Route, Outlet, Link, useMatch, useParams, useLocation} from "react-router-dom"
 import axios from "axios"
 import { setInterval } from "timers/promises";
 import { setIntervalAsync } from "set-interval-async/dynamic";
@@ -96,10 +95,6 @@ interface IPriceData {
   };
 }
 
-//Upbit
-const pricePerMinute =  "https://api.upbit.com/v1/candles/minutes/"; //+unit(interval minute)
-const updateInterval: number = 1;
-
 //StyledComponents 
 const MainContainer = styled.div`
 display: flex;
@@ -138,10 +133,10 @@ const Tab = styled.span<{ isActive: Boolean; }>`
 const CoinInfo = () => {
   const {state} = useLocation() as IRouterState;
   const {coinId} = useParams<{coinId?: string}>();
-
   //RouterMatch
   const isChart = useMatch("/:coinId/chart");
   const isPrice = useMatch("/:coinId/price");
+
 
   //Fetch
   const {isLoading: infoLoading, data: infoData} = useQuery<IInfoData>([`coinInfo/${coinId}`, coinId], () => coinInfo(coinId));
