@@ -1,23 +1,18 @@
-import React, {useEffect, useState} from "react"
+import React, { useState } from "react"
 import styled from "styled-components"
-import {Link} from "react-router-dom"
-import {useQuery} from "react-query"
-import {coinList} from "../api"
+import { Link } from "react-router-dom"
+import { useQuery } from "react-query"
+import { coinList } from "../api"
 import { Helmet } from "react-helmet";
-import {useRecoilValue} from "recoil";
-import {isSearching} from "../Atom"
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { search_query_manager, isSearching } from "../Atom";
+
+import Coin from "./Coin"
 
 
 const CoinsUpbitData = "https://api.upbit.com/v1/market/all";
 
 //fetch data
-interface IupBitcoinsInfo {
-  market: string; 
-  korean_name: string;
-  english_name: string;
-  symbol: string;
-}
-
 interface IpafrikaInfo {
   id: string;
   name: string;
@@ -34,83 +29,46 @@ display : flex;
 justify-content: center;
 flex-direction: column;
 `
-const Element = styled.div`
-margin-top : 2px;
-background-color: ${props => props.theme.elementColor};
-display: flex;
-height : 25px;
-width: 100%;
-border-radius: 12.5px 0px 0px 12.5px;
-align-items: center;
 
-`
-interface IcoinImageProps {
-  bgSrc:string;
+//checking between query and coin 
+export const check = (coin: IpafrikaInfo, query: any) => {
+  const length = query.length;
+  const sliced_coinName = coin.name.slice(0, length);
+  const sliced_coinSymbol = coin.symbol.slice(0, length);
+  return query.toLowerCase() === sliced_coinName.toLowerCase() || query.toLowerCase() === sliced_coinSymbol.toLowerCase();
 }
 
-const CoinImage = styled.div<IcoinImageProps>`
-background: no-repeat center/105% url(${props => props.bgSrc});
-background-color: ${props => props.theme.notLoadedColor};
-display: inline-block;
-height: 100%;
-width: 25px;
-overflow: hidden;
-border-radius: 12.5px;
-border: solid;
-border-width: 1.25px;
-border-color: black;
-`
-
-const CoinLink = styled(Link)`
-  
-`
-
-const CoinName = styled.span`
-padding-left: 5px;
-font-size: 16px;
-padding-bottom : 2px;
-display: inline-block;
-`
-
-const CoinImageURL = "https://cryptoicon-api.vercel.app/api/icon/"
-
+//Component
 const CoinList = () => {
-  const {isLoading, data} = useQuery<IpafrikaInfo[]>("coinList", coinList);
-  //coin query
-  const searchingData = useRecoilValue(isSearching); 
-  
+  const { isLoading, data } = useQuery<IpafrikaInfo[]>("coinList", coinList);
+  const searching = useRecoilValue(isSearching);
+  const query = useRecoilValue(search_query_manager);
+
+  //prevent overlapping searching
+  const [current_query, set_query] = useState("");
+  const [current_list, set_list] = useState<IpafrikaInfo[]>([]);
+
+  const find_coin = (arr: IpafrikaInfo[], query: any) => {
+    /*
+    if(current_query !== "" && query.includes(current_query)) {
+      console.log("same searcing context")
+      searching_list = current_list;
+    }
+    */
+    return arr.filter((element) => check(element, query));
+  }
+
   return (
     <>
       <Helmet>
         <title>{`CoinList`}</title>
       </Helmet>
-      {isLoading ? "Loading Now.." : 
-      <Container>
-        {data?.slice(0, 100).map(coin => {
-          if(searchingData){
-            const length = searchingData.length;
-            const sliced_coinName = coin.name.slice(0, length);
-            if(searchingData.toLowerCase() !== sliced_coinName.toLowerCase()){
-              return;
-            }
+      {isLoading ? "Loading Now.." :
+        <Container>
+          {
+            searching&&data!== undefined ? find_coin(data, query).map((coin) => <Coin coin={coin} />) : data?.slice(0, 100).map(coin => <Coin coin={coin} />)
           }
-          const linkTo = {
-            pathname: `/${coin.id}`,
-          }
-          const linkState = {
-            name: coin.name,
-          }
-          return (
-            <Element key={coin.id}>
-              <CoinImage bgSrc={CoinImageURL + coin.symbol.toLowerCase()} />
-              <CoinLink to={linkTo} state={linkState}>
-                <CoinName>{coin.name}</CoinName>
-              </CoinLink>
-            </Element>
-            )
-          }
-        )}
-      </Container>}
+        </Container>}
     </>
   )
 }
