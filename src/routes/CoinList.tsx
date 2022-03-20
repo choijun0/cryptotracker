@@ -1,16 +1,14 @@
-import React, { useState } from "react"
+import React, { useState, useRef} from "react"
 import styled from "styled-components"
 import { Link } from "react-router-dom"
 import { useQuery } from "react-query"
 import { coinList } from "../api"
 import { Helmet } from "react-helmet";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { search_query_manager, isSearching } from "../Atom";
+import { search_query, isSearching } from "../Atom";
 
 import Coin from "./Coin"
 
-
-const CoinsUpbitData = "https://api.upbit.com/v1/market/all";
 
 //fetch data
 interface IpafrikaInfo {
@@ -41,21 +39,25 @@ export const check = (coin: IpafrikaInfo, query: any) => {
 //Component
 const CoinList = () => {
   const { isLoading, data } = useQuery<IpafrikaInfo[]>("coinList", coinList);
-  const searching = useRecoilValue(isSearching);
-  const query = useRecoilValue(search_query_manager);
+  const searching = useRecoilValue(isSearching); //Updating when search_query is changing
+  const query = useRecoilValue(search_query);
 
   //prevent overlapping searching
-  const [current_query, set_query] = useState("");
-  const [current_list, set_list] = useState<IpafrikaInfo[]>([]);
+  const current_query_ref = useRef("");
+  const current_list_ref = useRef<IpafrikaInfo[]>([]);
 
   const find_coin = (arr: IpafrikaInfo[], query: any) => {
-    /*
-    if(current_query !== "" && query.includes(current_query)) {
-      console.log("same searcing context")
-      searching_list = current_list;
+    const cq = current_query_ref.current;
+    const cl = current_list_ref.current;
+    let searching_list = arr;
+    if(cq !== "" && query.includes(cq)) {
+      searching_list = cl;
     }
-    */
-    return arr.filter((element) => check(element, query));
+    console.log(searching_list.length)
+    const new_Arr = searching_list.filter((element) => check(element, query))
+    current_query_ref.current = query;
+    current_list_ref.current = new_Arr;
+    return new_Arr;
   }
 
   return (
@@ -66,9 +68,10 @@ const CoinList = () => {
       {isLoading ? "Loading Now.." :
         <Container>
           {
-            searching&&data!== undefined ? find_coin(data, query).map((coin) => <Coin coin={coin} />) : data?.slice(0, 100).map(coin => <Coin coin={coin} />)
+            searching&&data!== undefined ? find_coin(data, query).map((coin) => <Coin key={coin.id} coin={coin} />) : data?.slice(0, 100).map(coin => <Coin key={coin.id} coin={coin} />)
           }
         </Container>}
+
     </>
   )
 }

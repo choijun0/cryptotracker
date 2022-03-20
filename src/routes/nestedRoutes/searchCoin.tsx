@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import styled from "styled-components";
 import {useForm} from "react-hook-form"
 import {useRecoilState} from "recoil";
-import {search_query_manager} from "../../Atom";
+import {search_query} from "../../Atom";
 import { useNavigate } from "react-router-dom";
 import {queryClient} from "../../queryClient"
 
@@ -25,11 +25,11 @@ interface Iform {
 }
 
 const SearchCoin = () => {
-  const [search_word, set_search_word] = useRecoilState(search_query_manager);
+  const [search_word, set_search_word] = useRecoilState(search_query);
   const navigate = useNavigate();
 
   //react-hook-form
-  const {register, handleSubmit, formState : {errors}, setError} = useForm<Iform>({
+  const {register, handleSubmit, formState : {errors}, setError, setValue} = useForm<Iform>({
   defaultValues : {
     query : "",
   }
@@ -56,6 +56,10 @@ const SearchCoin = () => {
       })
       navigate('/')
     }
+
+    setValue("query", "", {
+      shouldValidate: true,
+    })
     set_search_word("");
   }
   
@@ -64,13 +68,15 @@ const SearchCoin = () => {
     register("query").onChange(event);
     
     //change recoil state
-    const input = event.target.value;
+    const input = event.target.value.trim();
     //limit length is three char
-    if(input.trim().length < 3) {
+    if(input.length < 3) {
       set_search_word("");
       return;
     }
-    set_search_word(event.target.value);
+
+    //setState
+    set_search_word(input);
   }
   
 return (

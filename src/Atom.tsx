@@ -1,11 +1,4 @@
-import {atom, selector, DefaultValue} from "recoil";
-
-interface IpafrikaInfo {
-  id: string;
-  name: string;
-  symbol: string;
-  rank: number;
-}
+import {atom, selector} from "recoil";
 
 
 export const isDarkMode = atom({
@@ -18,20 +11,10 @@ export const search_query = atom({
   default: "",
 })
 
-export const search_query_manager = selector({
-  key: "search_query_manage",
-  get: ({get})=> get(search_query),
-  set: ({set}, newValue) => {
-    if(typeof newValue === "string"){
-      set(search_query, newValue.trim());
-    }
-  },
-})
-
-
 export const isSearching = selector({
   key: "isLoading",
   get: ({get}) => {
-    return !(get(search_query) === "");
+    const query = get(search_query); //subscribe search_query(Atom)
+    return (query !== "")
   },
 })

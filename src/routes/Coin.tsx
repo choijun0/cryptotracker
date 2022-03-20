@@ -64,7 +64,7 @@ const Coin = ({coin} : any) => {
     name: coin.name,
   }
   return (
-    <Element key={coin.id}>
+    <Element>
       <CoinImage bgSrc={CoinImageURL + coin.symbol.toLowerCase()} />
         <CoinLink to={linkTo} state={linkState}>
         <CoinName>{coin.name}</CoinName>
